@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="pt-BR">
+<head><script src="https://myhub.ia.br/canvas-vendor/tailwind.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gerador de Apps Fênix · v1.3</title>
+<style>
+  :root{
+    --bg:#f4f6fb; --panel:#ffffff; --panel2:#f8fafc; --line:#e2e8f0;
+    --text:#0f172a; --muted:#64748b; --brand:#1d4ed8; --brand2:#2563eb;
+    --accent:#d97706; --ok:#059669; --bad:#dc2626;
+  }
+  html.dark{
+    --bg:#0a1120; --panel:#101a2e; --panel2:#152238; --line:#23314d;
+    --text:#e6edf7; --muted:#94a3b8; --brand:#3b82f6; --brand2:#60a5fa;
+    --accent:#fbbf24; --ok:#34d399; --bad:#f87171;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    font-size:15px; line-height:1.55; min-height:100vh;
+  }
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:1rem}
+  .panel2{background:var(--panel2)}
+  .muted{color:var(--muted)}
+  .brand{color:var(--brand)}
+  .accent{color:var(--accent)}
+  .ok{color:var(--ok)}
+  .bad{color:var(--bad)}
+  .line{border-color:var(--line)}
+  .logo-light{display:block}
+  .logo-dark{display:none}
+  html.dark .logo-light{display:none}
+  html.dark .logo-dark{display:block}
+
+  .btn{
+    display:inline-flex; align-items:center; gap:.45rem; justify-content:center;
+    padding:.55rem .9rem; border-radius:.7rem; font-weight:600; font-size:.85rem;
+    border:1px solid transparent; cursor:pointer; transition:filter .15s ease, background .15s ease, color .15s ease;
+  }
+  .btn:hover{filter:brightness(1.05)}
+  .btn-primary{background:var(--brand); color:#fff}
+  .btn-ghost{background:transparent; border-color:var(--line); color:var(--text)}
+  .btn-ghost:hover{background:var(--panel2)}
+  .btn-danger{background:var(--bad); color:#fff}
+  .btn-outline-ok{background:transparent; border-color:var(--ok); color:var(--ok)}
+  .btn:disabled{opacity:.45; cursor:not-allowed; filter:none}
+
+  .chip{
+    display:inline-flex; align-items:center; gap:.4rem; padding:.4rem .7rem; border-radius:999px;
+    border:1px solid var(--line); background:var(--panel); font-size:.78rem; font-weight:600; cursor:pointer;
+  }
+  .chip-active{background:var(--brand); color:#fff; border-color:var(--brand)}
+
+  .badge{display:inline-block; padding:.15rem .5rem; border-radius:999px; font-size:.72rem; font-weight:700; letter-spacing:.02em}
+  .badge-ok{background:rgba(5,150,105,.12); color:var(--ok)}
+  .badge-warn{background:rgba(217,119,6,.14); color:var(--accent)}
+  .badge-info{background:rgba(37,99,235,.12); color:var(--brand)}
+
+  .input, .select, .textarea{
+    width:100%; padding:.6rem .75rem; border-radius:.7rem; border:1px solid var(--line);
+    background:var(--panel); color:var(--text); font:inherit;
+  }
+  .input:focus, .select:focus, .textarea:focus{outline:none; border-color:var(--brand); box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .label{font-size:.78rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.03em}
+
+  .nav-btn{font-weight:600; padding:.45rem .75rem; border-radius:.7rem; color:var(--muted); cursor:pointer; border:1px solid transparent; background:transparent; font-size:.88rem}
+  .nav-btn:hover{color:var(--text); background:var(--panel2)}
+  .nav-btn-active{color:#fff; background:var(--brand)}
+
+  .stat{background:var(--panel); border:1px solid var(--line); border-radius:1rem; padding:.85rem 1rem}
+  .statnum{font-size:1.45rem; font-weight:800; line-height:1.1}
+  .statlabel{font-size:.75rem; color:var(--muted); font-weight:600}
+
+  .timeline-item{display:flex; gap:.8rem; position:relative; padding-bottom:1.2rem}
+  .timeline-item:not(:last-child)::before{content:""; position:absolute; left:.45rem; top:1.7rem; bottom:0; width:2px; background:var(--line)}
+  .timeline-dot{width:1rem; height:1rem; border-radius:50%; background:var(--panel2); border:2px solid var(--line); flex:none; position:relative; z-index:1}
+  .timeline-dot.done{background:var(--ok); border-color:var(--ok)}
+  .timeline-dot.now{background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 4px rgba(217,119,6,.18)}
+
+  .toast{
+    position:fixed; bottom:1.2rem; left:50%; transform:translateX(-50%); z-index:60;
+    background:var(--text); color:var(--bg); padding:.7rem 1.1rem; border-radius:.8rem;
+    font-weight:600; font-size:.85rem; box-shadow:0 12px 30px rgba(0,0,0,.25); opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease; max-width:90vw; text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(-4px)}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(2,6,23,.6); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:50; padding:1rem;
+  }
+  .modal{background:var(--panel); border:1px solid var(--line); border-radius:1rem; padding:1.2rem; width:min(720px,100%); max-height:85vh; overflow:auto}
+
+  .bar{height:.5rem; border-radius:999px; background:var(--panel2); border:1px solid var(--line); overflow:hidden}
+  .bar > div{height:100%; border-radius:999px; background:var(--ok); transition:width .3s ease}
+
+  .pre-wrap{white-space:pre-wrap; word-break:break-word; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.8rem; line-height:1.5}
+
+  .grid-card{transition:transform .15s ease, box-shadow .15s ease}
+  .grid-card:hover{transform:translateY(-2px); box-shadow:0 10px 24px rgba(2,6,23,.08)}
+  html.dark .grid-card:hover{box-shadow:0 10px 24px rgba(0,0,0,.35)}
+</style>
+</head>
+<body class="antialiased">
+
+<header style="position:sticky; top:0; z-index:30; background:var(--panel); border-bottom:1px solid var(--line)">
+  <div class="max-w-6xl mx-auto px-4 pt-3 pb-2 flex items-center gap-3">
+    <img src="canvas-asset:Fenix_Logo_Azul.png" class="h-10 w-auto logo-light" alt="Fênix">
+    <img src="canvas-asset:Fenix_Logo_Branca.png" class="h-10 w-auto logo-dark" alt="Fênix">
+    <div class="leading-tight min-w-0">
+      <div class="font-extrabold text-lg truncate">Gerador de Apps Fênix</div>
+      <div class="text-xs muted"><span class="brand font-semibold">fenix-criador-de-apps</span> · v1.3 · criar + revisar</div>
+    </div>
+    <div class="ml-auto flex items-center gap-2 flex-none">
+      <button class="btn btn-ghost" onclick="toggleTema()" title="Alternar tema">🌓</button>
+      <button class="btn btn-primary" onclick="abrirEstado()">💾 Estado</button>
+    </div>
+  </div>
+  <nav class="max-w-6xl mx-auto px-4 pb-2 flex gap-1 overflow-x-auto" id="navBar"></nav>
+</header>
+
+<main class="max-w-6xl mx-auto px-4 py-6" id="view"></main>
+
+<footer class="max-w-6xl mx-auto px-4 pb-8 text-xs muted">
+  Gerador de Apps Fênix v1.3 · <code>fenix-criador-de-apps</code> · Acervo base v5.8 com fallback embutido
+  · Fluxo de criação e fluxo de revisão/atualização de apps existentes · Persistência demonstrativa (estado por JSON).
+</footer>
+
+<div id="toastEl" class="toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+/* ============================================================
+   Gerador de Apps Fênix · v1.3 — Criação + Revisão incremental
+   ============================================================ */
+
+/* ---------- Acervo (fallback resumido v5.8) ---------- */
+const ACERVO = [
+  {
+    id: 'livro', nome: 'Livro das Regras', versao: 'v5.8', tipo: 'Regras',
+    resumo: [
+      'Nomenclatura e estrutura seguem o padrão Fênix',
+      'Não reinventar componentes que a biblioteca já entrega',
+      'Consistência visual, tom de voz e tratamento de erros',
+      'Sanitizar entradas e validar estados vazios',
+      'Entregas e respostas em pt-BR'
+    ]
+  },
+  {
+    id: 'guia', nome: 'Guia da Biblioteca', versao: 'v5.8', tipo: 'Biblioteca',
+    resumo: [
+      'Componentes prontos: login, onboarding, splash e painel admin',
+      'Templates v5.8 como base das telas',
+      'Estados de carregamento, vazio e erro já definidos',
+      'Composição de telas a partir dos blocos existentes'
+    ]
+  },
+  {
+    id: 'bloco', nome: 'Bloco de Entrega', versao: 'v5.8', tipo: 'Entrega',
+    resumo: [
+      'Checklist final antes de publicar',
+      'Nomes de arquivos e estrutura de pastas',
+      'Validações básicas e revisão de consistência',
+      'Instruções rápidas de uso para o usuário final'
+    ]
+  },
+  {
+    id: 'termos', nome: 'Termos de Uso', versao: 'v5.8', tipo: 'Legal',
+    resumo: [
+      'Manter o texto oficial sem alterações',
+      'Apontar para os endereços oficiais do projeto',
+      'Incluir apenas quando a etapa requisitar'
+    ]
+  },
+  {
+    id: 'politica', nome: 'Política de Privacidade', versao: 'v5.8', tipo: 'Legal',
+    resumo: [
+      'Manter o texto oficial sem alterações',
+      'Refletir o tratamento de dados descrito no app',
+      'Incluir apenas quando a etapa requisitar'
+    ]
+  }
+];
+
+const ACERVO_TK = 4100;
+
+/* ---------- Etapas ---------- */
+const ETAPAS = [
+  { id: 'ficha', icone: '📋', nome: 'Ficha & Escopo', le: null, precisa: [], modos: ['criar','revisar'],
+    resumoCustom: ['Esta etapa usa apenas a ficha; não é necessário ler documentos.'],
+    entrega: 'Confirmar o escopo do app e preparar a ficha resumida, sem fazer perguntas repetidas.' },
+  { id: 'regras', icone: '📖', nome: 'Regras do Livro', le: 'livro', precisa: [], modos: ['criar','revisar'],
+    entrega: 'Aplicar os pontos-chave do Livro das Regras ao app, listando conformidades e ajustes necessários.' },
+  { id: 'core', icone: '🧩', nome: 'Biblioteca / Core', le: 'guia', precisa: ['livro'], modos: ['criar','revisar'],
+    entrega: 'Gerar a estrutura de telas reutilizando os componentes v5.8 da biblioteca (login, onboarding, splash).' },
+  { id: 'inventario', icone: '🔍', nome: 'Inventário / Diagnóstico', le: null, precisa: ['livro','guia'], modos: ['revisar'],
+    resumoCustom: [
+      'Verificar aderência ao Livro das Regras, Core/templates v5.8, Termos e Política de Privacidade',
+      'Listar o que já cumpre e o que falta, com prioridade e risco',
+      'NÃO alterar código nesta etapa — entregar apenas o diagnóstico'
+    ],
+    entrega: 'Analisar o app existente (selo do head + Ficha A–J) e entregar o inventário do que já cumpre e do que falta, sem alterar código ainda.' },
+  { id: 'revisao', icone: '🔧', nome: 'Revisão & Atualização', le: null, precisa: ['livro','guia','termos'], modos: ['revisar'],
+    resumoCustom: [
+      'Alterações pequenas, incrementais e testadas — nada de reescrita total sem necessidade',
+      'Proteger dados: NÃO renomear chaves, coleções ou endpoints sem plano de migração',
+      'Sempre prever plano de volta (rollback) e manter compatibilidade',
+      'Entregar versão nova com changelog, manual de uso, testes e conferência'
+    ],
+    entrega: 'Propor e aplicar um plano de revisão incremental: priorizar gaps do inventário, proteger dados, manter compatibilidade e entregar versão nova com changelog, manual, testes e plano de volta.' },
+  { id: 'legal', icone: '⚖️', nome: 'Políticas & Legal', le: 'termos', precisa: ['livro','guia'], modos: ['criar','revisar'],
+    entrega: 'Incluir Termos de Uso e Política de Privacidade v5.8 com os endereços oficiais, sem alterar o texto.' },
+  { id: 'entrega', icone: '📦', nome: 'Entrega Final', le: 'bloco', precisa: ['livro','guia','termos'], modos: ['criar','revisar'],
+    entrega: 'Executar o checklist do Bloco de Entrega v5.8, revisar código, nomes e consistência final; em modo revisão, conferir versão, changelog, manual e testes.' }
+];
+
+function etapaPorId(id){ return ETAPAS.find(e => e.id === id); }
+function acervoPorId(id){ return ACERVO.find(a => a.id === id); }
+function etapasDoModo(modo){ return ETAPAS.filter(e => e.modos.includes(modo || 'criar')); }
+function etsDoApp(a){ return etapasDoModo(a && a.modoTarefa ? a.modoTarefa : 'criar'); }
+
+/* ---------- Estado em memória (sem storage — o canvas bloqueia) ---------- */
+const S = {
+  apps: [
+    {
+      id: 'app1', nome: 'Controle de Atendimento Fênix', tipo: 'Sistema web',
+      feature: 'Gestão de chamados, fila e status em tempo real', plataforma: 'Web',
+      regras: ['livro','core'], descricao: 'Dashboard simples para atendimento interno.',
+      modoTarefa: 'criar',
+      versaoAtual: '', versaoNova: '', seloHead: '', fichaAJ: '', invCumpre: '', invFalta: '',
+      etapaAtual: 'regras', concluidas: ['ficha'], lidos: ['livro'],
+      tokensEconomizados: 0, promptsGerados: 1,
+      historico: [
+        { ts: 'Hoje, 09:38', texto: 'Ficha preenchida e escopo definido' },
+        { ts: 'Hoje, 09:41', texto: 'Prompt da etapa Ficha & Escopo gerado' }
+      ]
+    },
+    {
+      id: 'app2', nome: 'Loja Virtual Fênix', tipo: 'E-commerce',
+      feature: 'Catálogo de produtos + checkout', plataforma: 'Web + Mobile',
+      regras: ['livro','legal'], descricao: 'Loja simples com carrinho e fechamento de pedido.',
+      modoTarefa: 'revisar',
+      versaoAtual: '1.0.0', versaoNova: '1.1.0',
+      seloHead: '<meta name="fenix-app" content="loja-virtual"><meta name="fenix-core" content="v5.8">',
+      fichaAJ: 'A: Loja Virtual Fênix\nB: Catálogo, carrinho, checkout\nC: Firestore + Auth\nD: Gateway de pagamento\nE: Regras de acesso por perfil\nF: LGPD básico\nG: Catálogo responsivo\nH: Vercel\nI: Manual interno\nJ: Versão 1.0.0',
+      invCumpre: '- Login por e-mail\n- Termos de uso linkados\n- Layout base v5.8',
+      invFalta: '- Política de privacidade desatualizada\n- Splash sem logo oficial\n- Nomenclatura parcial fora do padrão',
+      etapaAtual: 'inventario', concluidas: ['ficha'], lidos: [],
+      tokensEconomizados: 0, promptsGerados: 0,
+      historico: [{ ts: 'Hoje, 10:02', texto: 'App importado para o fluxo de revisão' }]
+    }
+  ],
+  appAtivo: 'app1',
+  etapaAtiva: 'regras',
+  modoEnxuto: true,
+  fichaCompleta: false,
+  ultimoPrompt: '',
+  ultimaEconomia: 0,
+  ui: { view: 'home' }
+};
+
+function appAtivo(){ return S.apps.find(a => a.id === S.appAtivo) || S.apps[0]; }
+
+/* ---------- Estimativa de tokens ---------- */
+function estTokens(t){
+  const w = String(t || '').trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(w * 1.25));
+}
+
+/* ---------- Toast ---------- */
+let toastTimer = null;
+function toast(msg){
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+/* ---------- Cópia com fallback ---------- */
+function copiarTexto(texto, msgOk, msgFallback){
+  const ta = document.createElement('textarea');
+  ta.value = texto;
+  ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  let ok = false;
+  try { ok = document.execCommand('copy'); } catch(e){ ok = false; }
+  document.body.removeChild(ta);
+  if(ok){ toast(msgOk || 'Copiado!'); } else { toast(msgFallback || 'Não foi possível copiar automaticamente.'); }
+  return ok;
+}
+
+/* ---------- Tema ---------- */
+function toggleTema(){
+  document.documentElement.classList.toggle('dark');
+  renderNav();
+}
+
+/* ---------- Navegação ---------- */
+const VIEWS = [
+  { id: 'home',     label: 'Início',     icone: '🏠' },
+  { id: 'ficha',    label: 'Ficha',      icone: '📋' },
+  { id: 'prompt',   label: 'Prompt',     icone: '⚡' },
+  { id: 'progresso',label: 'Progresso',  icone: '🗂️' },
+  { id: 'acervo',   label: 'Acervo',     icone: '📚' },
+  { id: 'ajuda',    label: 'Ajuda',      icone: '❓' }
+];
+
+function go(view){ S.ui.view = view; render(); }
+
+function renderNav(){
+  const nav = document.getElementById('navBar');
+  nav.innerHTML = VIEWS.map(v =>
+    `<button class="nav-btn ${S.ui.view === v.id ? 'nav-btn-active' : ''}" onclick="go('${v.id}')">${v.icone} ${v.label}</button>`
+  ).join('');
+}
+
+function render(){
+  renderNav();
+  const root = document.getElementById('view');
+  const map = { home: renderHome, ficha: renderFicha, prompt: renderPrompt, progresso: renderProgresso, acervo: renderAcervo, ajuda: renderAjuda };
+  root.innerHTML = (map[S.ui.view] || renderHome)();
+}
+
+/* ---------- Helpers de exibição ---------- */
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pct(a){ const ets = etsDoApp(a); const n = ets.filter(e => a.concluidas.includes(e.id)).length; return Math.round((n / ets.length) * 100); }
+function badgeEtapa(id){
+  const a = appAtivo(); const e = etapaPorId(id);
+  if(a.concluidas.includes(id)) return '<span class="badge badge-ok">concluída</span>';
+  if(a.etapaAtual === id) return '<span class="badge badge-warn">etapa atual</span>';
+  return '<span class="badge badge-info">pendente</span>';
+}
+function badgeModo(a){ return a.modoTarefa === 'revisar' ? '🔧 Revisão' : '🆕 Criação'; }
+
+/* ============================================================
+   VIEW: INÍCIO
+   ============================================================ */
+function renderHome(){
+  const total = S.apps.reduce((s,a) => s + a.tokensEconomizados, 0);
+  const cards = S.apps.length
+    ? S.apps.map(a => `
+      <div class="panel p-5 grid-card cursor-pointer" onclick="setApp('${a.id}'); go('ficha');">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="font-bold text-base truncate">${esc(a.nome)}</div>
+            <div class="text-xs muted">${esc(a.tipo)} · ${esc(a.plataforma)} · ${badgeModo(a)}</div>
+          </div>
+          <span class="badge badge-info flex-none">${etapaAtivaNome(a)}</span>
+        </div>
+        <div class="bar mt-4"><div style="width:${pct(a)}%"></div></div>
+        <div class="flex items-center justify-between mt-2 text-xs muted">
+          <span>Etapas: ${a.concluidas.length}/${etsDoApp(a).length}</span>
+          <span>${a.tokensEconomizados.toLocaleString('pt-BR')} tk economizados</span>
+        </div>
+        <div class="flex gap-2 mt-4" onclick="event.stopPropagation()">
+          <button class="btn btn-primary flex-1" onclick="setApp('${a.id}'); go('prompt')">⚡ Gerar prompt</button>
+          <button class="btn btn-ghost" onclick="setApp('${a.id}'); go('progresso')">Registro</button>
+          <button class="btn btn-danger" onclick="excluirApp('${a.id}')">✕</button>
+        </div>
+      </div>`).join('')
+    : `<div class="panel p-8 text-center muted col-span-full">Nenhum app ainda. Crie o primeiro para começar.</div>`;
+
+  return `
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div>
+        <h1 class="text-xl font-extrabold m-0">Seus apps</h1>
+        <p class="text-sm muted m-0">Cada app mantém o próprio registro de etapas, leituras e prompts — criando do zero ou revisando.</p>
+      </div>
+      <button class="btn btn-primary" onclick="novoApp()">➕ Novo app</button>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-3 mb-6">
+      <div class="stat"><div class="statnum brand">${S.apps.length}</div><div class="statlabel">apps em andamento</div></div>
+      <div class="stat"><div class="statnum ok">${total.toLocaleString('pt-BR')}</div><div class="statlabel">tokens economizados no total</div></div>
+      <div class="stat"><div class="statnum accent">${S.modoEnxuto ? 'Enxuto' : 'Completo'}</div><div class="statlabel">modo de prompt ativo</div></div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">${cards}</div>
+  `;
+}
+
+function etapaAtivaNome(a){ const e = etapaPorId(a.etapaAtual); return e ? e.nome : '—'; }
+
+/* ============================================================
+   VIEW: FICHA
+   ============================================================ */
+function renderFicha(){
+  const a = appAtivo();
+  const regrasSel = a.regras;
+  const optsTipo = ['Sistema web','App mobile','E-commerce','Dashboard','Landing page','Integração / API','Outro']
+    .map(t => `<option ${a.tipo === t ? 'selected' : ''}>${t}</option>`).join('');
+  const optsPlat = ['Web','Mobile','Web + Mobile','Desktop','API']
+    .map(p => `<option ${a.plataforma === p ? 'selected' : ''}>${p}</option>`).join('');
+  const optsModo = `
+    <option value="criar" ${a.modoTarefa === 'criar' ? 'selected' : ''}>🆕 Criar app do zero</option>
+    <option value="revisar" ${a.modoTarefa === 'revisar' ? 'selected' : ''}>🔧 Revisar / Atualizar app existente</option>`;
+  const optsEtapa = etsDoApp(a).map(e => `<option value="${e.id}" ${a.etapaAtual === e.id ? 'selected' : ''}>${e.nome}</option>`).join('');
+  const regrasBoxes = ['livro','guia','bloco','termos','politica'].map(id => {
+    const r = acervoPorId(id);
+    return `<label class="flex items-center gap-2 text-sm cursor-pointer">
+      <input type="checkbox" id="reg_${id}" ${regrasSel.includes(id) ? 'checked' : ''} class="w-4 h-4">
+      <span>${esc(r.nome)} <span class="muted">(${r.versao})</span></span>
+    </label>`;
+  }).join('');
+
+  const secaoRevisao = a.modoTarefa === 'revisar' ? `
+    <div class="panel p-5 border" style="border-color:var(--accent)">
+      <div class="font-bold mb-1">🔍 Dados do app existente</div>
+      <p class="text-xs muted mb-3">Alimentam o inventário e o plano de revisão sem exigir releitura completa do material.</p>
+      <div class="space-y-4">
+        <div>
+          <label class="label">Versão atual → próxima</label>
+          <div class="grid grid-cols-2 gap-3 mt-1">
+            <input id="f_vatual" class="input" value="${esc(a.versaoAtual || '')}" placeholder="Ex.: 1.0.0">
+            <input id="f_vnova" class="input" value="${esc(a.versaoNova || '')}" placeholder="Ex.: 1.1.0">
+          </div>
+        </div>
+        <div>
+          <label class="label">Selo do &lt;head&gt;</label>
+          <textarea id="f_selo" rows="3" class="textarea mt-1" placeholder="Bloco do cabeçalho que identifica o app: meta tags, scripts, tokens...">${esc(a.seloHead || '')}</textarea>
+        </div>
+        <div>
+          <label class="label">Ficha A–J atual</label>
+          <textarea id="f_fichaAJ" rows="6" class="textarea mt-1 pre-wrap" placeholder="A: Identificação / B: Funcionalidades / C: Dados e Tecnologia / D: Integrações / E: Segurança e Acessos / F: Conformidade Legal / G: UX e Interface / H: Desempenho e Infra / I: Documentação e Suporte / J: Roadmap e Versões">${esc(a.fichaAJ || '')}</textarea>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label class="label">Inventário — já cumpre</label>
+            <textarea id="f_invcumpre" rows="4" class="textarea mt-1" placeholder="O que o app já segue do Livro, Core e legal...">${esc(a.invCumpre || '')}</textarea>
+          </div>
+          <div>
+            <label class="label">Inventário — falta / risco</label>
+            <textarea id="f_invfalta" rows="4" class="textarea mt-1" placeholder="Gaps, desatualizações, riscos...">${esc(a.invFalta || '')}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>` : '';
+
+  return `
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div>
+        <h1 class="text-xl font-extrabold m-0">Ficha do app</h1>
+        <p class="text-sm muted m-0">Preencha apenas o essencial. O prompt enxuto usa só o que está preenchido.</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost" onclick="go('home')">← Voltar</button>
+        <button class="btn btn-primary" onclick="salvarFicha()">💾 Salvar ficha</button>
+      </div>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="panel p-5 lg:col-span-2 space-y-4">
+        <div>
+          <label class="label">Modo de tarefa</label>
+          <select id="f_modo" class="select mt-1" onchange="modoFichaChange(this.value)">${optsModo}</select>
+          <p class="text-xs muted mt-1">🆕 Criar do zero segue o fluxo completo de construção. 🔧 Revisar adiciona Inventário e Revisão incremental, com proteção de dados, plano de volta e changelog.</p>
+        </div>
+        <div>
+          <label class="label">Nome do app *</label>
+          <input id="f_nome" class="input mt-1" value="${esc(a.nome)}" placeholder="Ex.: Controle de Atendimento Fênix">
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label class="label">Tipo</label>
+            <select id="f_tipo" class="select mt-1">${optsTipo}</select>
+          </div>
+          <div>
+            <label class="label">Plataforma</label>
+            <select id="f_plataforma" class="select mt-1">${optsPlat}</select>
+          </div>
+        </div>
+        <div>
+          <label class="label">Funcionalidade principal ${a.modoTarefa === 'criar' ? '*' : ''}</label>
+          <input id="f_feature" class="input mt-1" value="${esc(a.feature)}" placeholder="O que o app DEVE fazer">
+        </div>
+        <div>
+          <label class="label">Descrição / escopo</label>
+          <textarea id="f_descricao" rows="3" class="textarea mt-1" placeholder="Contexto extra, o que NÃO fazer, público-alvo...">${esc(a.descricao)}</textarea>
+        </div>
+        ${secaoRevisao}
+      </div>
+
+      <div class="space-y-4">
+        <div class="panel p-5">
+          <div class="font-bold mb-3">Etapa atual</div>
+          <select id="f_etapa" class="select" onchange="S.etapaAtiva=this.value">${optsEtapa}</select>
+          <p class="text-xs muted mt-2">O prompt será gerado para esta etapa, dentro do modo ${a.modoTarefa === 'revisar' ? 'Revisão' : 'Criação'}.</p>
+        </div>
+        <div class="panel p-5">
+          <div class="font-bold mb-3">Regras aplicáveis</div>
+          <div class="space-y-2">${regrasBoxes}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function modoFichaChange(modo){
+  const a = appAtivo();
+  a.modoTarefa = modo;
+  const ets = etsDoApp(a);
+  if(!ets.some(e => e.id === a.etapaAtual)){ a.etapaAtual = ets[0].id; S.etapaAtiva = ets[0].id; }
+  render();
+}
+
+function salvarFicha(){
+  const a = appAtivo();
+  const modo = document.getElementById('f_modo').value;
+  const nome = document.getElementById('f_nome').value.trim();
+  const feature = document.getElementById('f_feature').value.trim();
+  if(!nome){ toast('Informe o nome do app.'); return; }
+  if(modo === 'criar' && !feature){ toast('No modo Criar, informe a funcionalidade principal.'); return; }
+
+  const regras = ['livro','guia','bloco','termos','politica'].filter(id => document.getElementById('reg_'+id).checked);
+  const etapa = document.getElementById('f_etapa').value;
+
+  const antes = a.nome + '|' + a.feature + '|' + a.tipo + '|' + (a.modoTarefa || 'criar');
+  a.modoTarefa = modo;
+  a.nome = nome;
+  a.tipo = document.getElementById('f_tipo').value;
+  a.feature = feature;
+  a.plataforma = document.getElementById('f_plataforma').value;
+  a.descricao = document.getElementById('f_descricao').value.trim();
+  a.regras = regras;
+  a.etapaAtual = etapa;
+  S.etapaAtiva = etapa;
+
+  if(modo === 'revisar'){
+    const ach = (document.getElementById('f_fichaAJ').value.trim() || document.getElementById('f_selo').value.trim());
+    if(!ach){ toast('No modo Revisão, informe ao menos a Ficha A–J ou o selo do <head>.'); return; }
+    a.versaoAtual = document.getElementById('f_vatual').value.trim();
+    a.versaoNova = document.getElementById('f_vnova').value.trim();
+    a.seloHead = document.getElementById('f_selo').value.trim();
+    a.fichaAJ = document.getElementById('f_fichaAJ').value.trim();
+    a.invCumpre = document.getElementById('f_invcumpre').value.trim();
+    a.invFalta = document.getElementById('f_invfalta').value.trim();
+  }
+
+  const depois = a.nome + '|' + a.feature + '|' + a.tipo + '|' + a.modoTarefa;
+  if(antes !== depois){
+    a.historico.push({ ts: agora(), texto: 'Ficha atualizada — modo ' + (a.modoTarefa === 'revisar' ? 'Revisão' : 'Criação') });
+    toast('Ficha salva e registrada no histórico.');
+  } else {
+    toast('Ficha salva.');
+  }
+  render();
+}
+
+function novoApp(){
+  const id = 'app_' + Date.now();
+  S.apps.push({
+    id, nome: 'Novo app Fênix', tipo: 'Sistema web', feature: '', plataforma: 'Web',
+    regras: ['livro'], descricao: '',
+    modoTarefa: 'criar', versaoAtual: '', versaoNova: '', seloHead: '', fichaAJ: '', invCumpre: '', invFalta: '',
+    etapaAtual: 'ficha', concluidas: [], lidos: [],
+    tokensEconomizados: 0, promptsGerados: 0, historico: [{ ts: agora(), texto: 'App criado' }]
+  });
+  S.appAtivo = id; S.etapaAtiva = 'ficha';
+  render(); go('ficha');
+  toast('Novo app criado. Preencha a ficha.');
+}
+
+function excluirApp(id){
+  if(!confirm('Excluir este app e todo o progresso registrado?')) return;
+  S.apps = S.apps.filter(a => a.id !== id);
+  if(S.appAtivo === id) S.appAtivo = (S.apps[0] || {}).id;
+  render(); go('home');
+  toast('App excluído.');
+}
+
+function setApp(id){
+  S.appAtivo = id;
+  const a = appAtivo(); if(!a) return;
+  const ets = etsDoApp(a);
+  if(!ets.some(e => e.id === a.etapaAtual)) a.etapaAtual = ets[0].id;
+  S.etapaAtiva = a.etapaAtual;
+}
+
+/* ============================================================
+   VIEW: PROMPT
+   ============================================================ */
+function renderPrompt(){
+  const a = appAtivo();
+  const chips = etsDoApp(a).map(e => {
+    const done = a.concluidas.includes(e.id);
+    return `<button class="chip ${S.etapaAtiva === e.id ? 'chip-active' : ''}" onclick="setEtapa('${e.id}')">
+      ${e.icone} ${e.nome} ${done ? '✓' : ''}
+    </button>`;
+  }).join('');
+
+  const jaLidos = a.lidos.map(id => {
+    const d = acervoPorId(id); return d ? `<span class="badge badge-ok">✓ ${esc(d.nome)} lido</span>` : '';
+  }).join(' ');
+
+  const extraRevisao = a.modoTarefa === 'revisar'
+    ? `<div class="mt-2 text-xs muted">📦 Revisão: <b>${esc(a.versaoAtual || '—')} → ${esc(a.versaoNova || '—')}</b> · selo: ${a.seloHead ? 'preenchido' : 'vazio'} · ficha A–J: ${a.fichaAJ ? 'preenchida' : 'vazia'} · inventário: ${(a.invCumpre || a.invFalta) ? 'preenchido' : 'vazio'}</div>`
+    : '';
+
+  const saida = S.ultimoPrompt
+    ? `<div class="panel p-5 mt-4">
+        <div class="flex items-center gap-2 mb-3 flex-wrap">
+          <span class="font-bold">Prompt gerado</span>
+          <span class="badge badge-info">${S.modoEnxuto ? 'MODO ENXUTO' : 'MODO COMPLETO'}</span>
+          <span class="badge ${a.modoTarefa === 'revisar' ? 'badge-warn' : 'badge-info'}">${badgeModo(a)}</span>
+          <span class="badge badge-ok">economia: ~${S.ultimaEconomia.toLocaleString('pt-BR')} tk</span>
+        </div>
+        <pre class="panel2 border line rounded-xl p-4 pre-wrap overflow-auto" style="max-height:42vh">${esc(S.ultimoPrompt)}</pre>
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <button class="btn btn-primary" onclick="copiarPrompt()">📋 Copiar prompt</button>
+          <button class="btn btn-ghost" onclick="registrarGeracao()">✓ Registrar geração no progresso</button>
+        </div>
+      </div>`
+    : '';
+
+  return `
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div>
+        <h1 class="text-xl font-extrabold m-0">Gerar prompt</h1>
+        <p class="text-sm muted m-0">App ativo: <span class="text-sm font-semibold">${esc(a.nome)}</span> <span class="badge ${a.modoTarefa === 'revisar' ? 'badge-warn' : 'badge-info'}">${badgeModo(a)}</span></p>
+      </div>
+      <label class="flex items-center gap-2 text-sm font-semibold cursor-pointer panel px-3 py-2">
+        <input type="checkbox" ${S.modoEnxuto ? 'checked' : ''} onchange="S.modoEnxuto=this.checked; render()">
+        ⚡ Modo econômico (enxuto)
+      </label>
+    </div>
+
+    <div class="panel p-5 mb-4">
+      <div class="label mb-2">Etapa do prompt</div>
+      <div class="flex gap-2 flex-wrap">${chips}</div>
+      <div class="mt-3 text-xs muted">Etapa selecionada: <b>${esc(etapaAtualObj().nome)}</b> — ${esc(etapaAtualObj().entrega)}</div>
+    </div>
+
+    <div class="panel p-5 mb-4">
+      <div class="label mb-2">Contexto incremental do app</div>
+      <div class="flex gap-2 flex-wrap mb-3">${jaLidos || '<span class="badge badge-warn">nada lido ainda — primeira etapa não exige leitura</span>'}</div>
+      ${extraRevisao}
+      <label class="flex items-center gap-2 text-sm cursor-pointer mt-3">
+        <input type="checkbox" ${S.fichaCompleta ? 'checked' : ''} onchange="S.fichaCompleta=this.checked">
+        Incluir ficha completa (mais tokens)
+      </label>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-4 mb-4">
+      <div class="stat"><div class="statnum brand">~${estTokens(textoPrompt()).toLocaleString('pt-BR')}</div><div class="statlabel">tokens estimados do prompt</div></div>
+      <div class="stat"><div class="statnum ok">~${economiaEstimada().toLocaleString('pt-BR')}</div><div class="statlabel">tokens a economizar nesta geração</div></div>
+    </div>
+
+    <button class="btn btn-primary w-full" onclick="gerarPrompt()">⚡ Gerar prompt agora</button>
+    ${saida}
+  `;
+}
+
+function setEtapa(id){ S.etapaAtiva = id; render(); }
+
+function etapaAtualObj(){
+  let e = etapaPorId(S.etapaAtiva);
+  const a = appAtivo();
+  if(!e || !etsDoApp(a).some(x => x.id === e.id)){ e = etsDoApp(a)[0]; S.etapaAtiva = e.id; }
+  return e;
+}
+
+function textoPrompt(){
+  const a = appAtivo(); const e = etapaAtualObj();
+  return S.modoEnxuto ? montarPromptEnxuto(a, e) : montarPromptCompleto(a, e);
+}
+
+function economiaEstimada(){
+  const a = appAtivo(); const e = etapaAtualObj();
+  if(!S.modoEnxuto) return 0;
+  const tkCompleto = estTokens(montarPromptCompleto(a, e)) + ACERVO_TK;
+  const tkEnxuto = estTokens(montarPromptEnxuto(a, e));
+  return Math.max(0, tkCompleto - tkEnxuto);
+}
+
+/* ---------- Montagem de dados ---------- */
+function fichaResumida(a){
+  const linhas = [
+    '- Nome: ' + (a.nome || '—'),
+    '- Tipo: ' + (a.tipo || '—'),
+    '- Funcionalidade principal: ' + (a.feature || '—'),
+    '- Plataforma: ' + (a.plataforma || '—'),
+    '- Regras aplicáveis: ' + (a.regras.map(r => (acervoPorId(r) || {}).nome || r).join(', ') || 'nenhuma'),
+    '- Etapa atual: ' + ((etapaPorId(a.etapaAtual) || {}).nome || '—')
+  ];
+  if(a.descricao) linhas.push('- Escopo/observações: ' + a.descricao);
+  if(a.modoTarefa === 'revisar'){
+    linhas.push('- MODO TAREFA: REVISAR / ATUALIZAR app existente');
+    linhas.push('- Versão atual: ' + (a.versaoAtual || '—') + ' → próxima: ' + (a.versaoNova || '—'));
+    if(a.seloHead) linhas.push('- Selo <head>: ' + (a.seloHead || '').slice(0, 220));
+    if(a.fichaAJ) linhas.push('- Ficha A–J: ' + (a.fichaAJ || '').split('\n').filter(Boolean).slice(0, 5).join(' | '));
+    if(a.invCumpre) linhas.push('- Já cumpre: ' + (a.invCumpre || '').split('\n').filter(Boolean).slice(0, 4).join(' | '));
+    if(a.invFalta) linhas.push('- Falta / risco: ' + (a.invFalta || '').split('\n').filter(Boolean).slice(0, 4).join(' | '));
+  }
+  return linhas.join('\n');
+}
+
+function fichaCompleta(a){
+  const base = {
+    nome: a.nome, tipo: a.tipo, funcionalidade: a.feature,
+    plataforma: a.plataforma, descricao: a.descricao,
+    regrasAplicaveis: a.regras, etapaAtual: a.etapaAtual,
+    etapasConcluidas: a.concluidas, documentosLidos: a.lidos
+  };
+  if(a.modoTarefa === 'revisar'){
+    base.modoTarefa = 'revisar';
+    base.versaoAtual = a.versaoAtual || '';
+    base.versaoNova = a.versaoNova || '';
+    base.seloHead = a.seloHead || '';
+    base.fichaAJ = a.fichaAJ || '';
+    base.inventarioCumpre = a.invCumpre || '';
+    base.inventarioFalta = a.invFalta || '';
+  } else {
+    base.modoTarefa = 'criar';
+  }
+  return JSON.stringify(base, null, 2);
+}
+
+function dadosExistenteResumido(a){
+  const l = [];
+  l.push('- Versão atual: ' + (a.versaoAtual || '—') + ' → próxima: ' + (a.versaoNova || '—'));
+  if(a.seloHead) l.push('- Selo do <head>: ' + (a.seloHead || '').slice(0, 240));
+  if(a.fichaAJ){ const linhas = (a.fichaAJ || '').split('\n').filter(Boolean); l.push('- Ficha A–J (resumo): ' + (linhas.length ? linhas.slice(0, 6).join(' | ') : '—')); }
+  if(a.invCumpre){ const linhas = (a.invCumpre || '').split('\n').filter(Boolean); l.push('- Já cumpre: ' + (linhas.length ? linhas.slice(0, 5).join(' | ') : '—')); }
+  if(a.invFalta){ const linhas = (a.invFalta || '').split('\n').filter(Boolean); l.push('- Falta / risco: ' + (linhas.length ? linhas.slice(0, 5).join(' | ') : '—')); }
+  if(!a.seloHead && !a.fichaAJ && !a.invCumpre && !a.invFalta) l.push('- (dados do app existente ainda não preenchidos — preencha na ficha)');
+  return l.join('\n');
+}
+
+function progressoResumido(a){
+  const ets = etsDoApp(a);
+  const etsTxt = ets.map(e => {
+    const st = a.concluidas.includes(e.id) ? 'CONCLUÍDA' : (a.etapaAtual === e.id ? 'ATUAL' : 'pendente');
+    return '- ' + e.nome + ' (' + st + ')';
+  }).join('\n');
+  const hist = a.historico.length
+    ? a.historico.slice(-6).map(h => '- ' + h.ts + ': ' + h.texto).join('\n')
+    : '- Nenhum evento registrado ainda.';
+  return 'Modo: ' + (a.modoTarefa === 'revisar' ? 'REVISÃO' : 'CRIAÇÃO') + '\nEtapas:\n' + etsTxt + '\n\nÚltimos eventos registrados:\n' + hist;
+}
+
+function pontosEnxuto(e){
+  if(e.resumoCustom && e.resumoCustom.length) return e.resumoCustom.map(p => '- ' + p).join('\n');
+  if(e.le && acervoPorId(e.le)) return acervoPorId(e.le).resumo.map(p => '- ' + p).join('\n');
+  return '- Esta etapa usa apenas a ficha; não é necessário ler documentos.';
+}
+
+function jaLidoBloco(a, e){
+  if(!e.precisa || !e.precisa.length) return '';
+  const nomes = e.precisa.map(id => (acervoPorId(id) || {}).nome).filter(Boolean);
+  return '\n\n📌 JÁ LIDO (não releia estes documentos — use apenas o que já foi aplicado):\n' +
+    nomes.map(n => '- ' + n).join('\n');
+}
+
+/* ---------- Montagem dos prompts ---------- */
+function montarPromptEnxuto(a, e){
+  const bloco = [];
+  bloco.push('Você está no **Gerador de Apps Fênix** (`fenix-criador-de-apps`) v1.3.');
+  bloco.push('Modo: CONTEXTO ENXUTO — consuma o mínimo de tokens possível.');
+  if(a.modoTarefa === 'revisar'){
+    bloco.push('Tarefa: REVISAR / ATUALIZAR o app existente "' + a.nome + '" — etapa "' + e.nome + '".');
+  } else {
+    bloco.push('Tarefa: CRIAR o app "' + a.nome + '" do zero — etapa "' + e.nome + '".');
+  }
+  bloco.push('\n⛳ CONTEXTO MÍNIMO DA ETAPA (use somente isto):');
+  bloco.push(pontosEnxuto(e));
+  bloco.push('\n🧾 PROGRESSO REGISTRADO (não pergunte de novo o que já foi feito):');
+  bloco.push(progressoResumido(a));
+  if(S.fichaCompleta){
+    bloco.push('\n📄 FICHA COMPLETA:');
+    bloco.push(fichaCompleta(a));
+  } else {
+    bloco.push('\n📄 FICHA RESUMIDA:');
+    bloco.push(fichaResumida(a));
+  }
+  if(a.modoTarefa === 'revisar'){
+    bloco.push('\n📦 APP EXISTENTE (somente o essencial para esta etapa):');
+    bloco.push(dadosExistenteResumido(a));
+  }
+  bloco.push('\n👉 Regras de conduta:');
+  bloco.push('1. Não peça informações que já constam na ficha ou no progresso.');
+  bloco.push('2. Use apenas o resumo embutido; NÃO peça para reler o Livro, o Guia ou o Bloco de Entrega completos.');
+  bloco.push('3. Responda em pt-BR, de forma direta e acionável.');
+  bloco.push('4. Se faltar UM detalhe decisivo que não esteja registrado, faça UMA única pergunta objetiva e aguarde a resposta.');
+  if(a.modoTarefa === 'revisar'){
+    bloco.push('5. Proteção de dados: NÃO renomear chaves, coleções ou endpoints sem plano de migração; manter compatibilidade dos dados existentes.');
+    bloco.push('6. Entregue mudanças incrementais, testadas, com changelog e plano de volta (rollback).');
+  }
+  bloco.push('\n🎯 Entrega esperada: ' + e.entrega);
+  return bloco.join('\n');
+}
+
+function montarPromptCompleto(a, e){
+  const bloco = [];
+  bloco.push('Você está no **Gerador de Apps Fênix** (`fenix-criador-de-apps`) v1.3.');
+  bloco.push('Modo: CONTEXTO COMPLETO — leitura integral autorizada para esta geração.');
+  bloco.push('\nLeia integralmente os documentos do acervo v5.8:');
+  bloco.push(ACERVO.map(d => '- ' + d.nome + ' (' + d.versao + ')').join('\n'));
+  if(a.modoTarefa === 'revisar'){
+    bloco.push('\nTarefa: REVISAR / ATUALIZAR o app existente "' + a.nome + '" — etapa "' + e.nome + '".');
+  } else {
+    bloco.push('\nTarefa: CRIAR o app "' + a.nome + '" do zero — etapa "' + e.nome + '".');
+  }
+  bloco.push('\nFICHA COMPLETA:');
+  bloco.push(fichaCompleta(a));
+  bloco.push('\nProgresso já registrado (para evitar retrabalho):');
+  bloco.push(progressoResumido(a));
+  if(a.modoTarefa === 'revisar'){
+    bloco.push('\n🔧 MODO REVISÃO: proponha mudanças incrementais; não renomeie chaves/coleções sem migração; inclua plano de volta, testes, changelog e manual.');
+  }
+  bloco.push('\n🎯 Entrega esperada: ' + e.entrega);
+  return bloco.join('\n');
+}
+
+/* ---------- Ações do prompt ---------- */
+function gerarPrompt(){
+  S.ultimoPrompt = textoPrompt();
+  S.ultimaEconomia = economiaEstimada();
+  render();
+  toast('Prompt gerado em modo ' + (S.modoEnxuto ? 'enxuto' : 'completo') + '.');
+}
+
+function copiarPrompt(){
+  if(!S.ultimoPrompt){ toast('Gere o prompt primeiro.'); return; }
+  copiarTexto(S.ultimoPrompt, 'Prompt copiado!', 'Selecione e copie o texto manualmente.');
+}
+
+function registrarGeracao(){
+  const a = appAtivo(); const e = etapaAtualObj();
+  const econ = economiaEstimada();
+  a.historico.push({ ts: agora(), texto: 'Prompt gerado — etapa ' + e.nome + (econ ? ' (economia ~' + econ.toLocaleString('pt-BR') + ' tk)' : '') });
+  a.promptsGerados = (a.promptsGerados || 0) + 1;
+  a.tokensEconomizados += econ;
+  render();
+  toast('Geração registrada no histórico do app.');
+}
+
+/* ============================================================
+   VIEW: PROGRESSO
+   ============================================================ */
+function renderProgresso(){
+  const a = appAtivo();
+  const timeline = etsDoApp(a).map(e => {
+    const done = a.concluidas.includes(e.id);
+    const now = a.etapaAtual === e.id;
+    const cls = done ? 'done' : (now ? 'now' : '');
+    const acao = !done
+      ? `<button class="btn btn-outline-ok" style="padding:.35rem .7rem;font-size:.75rem" onclick="marcarEtapa('${e.id}')">✓ Concluir etapa</button>`
+      : '';
+    return `<div class="timeline-item">
+      <div class="timeline-dot ${cls}"></div>
+      <div class="panel p-4 flex-1">
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="font-bold">${e.icone} ${esc(e.nome)}</div>
+          <div class="flex items-center gap-2">${badgeEtapa(e.id)} ${acao}</div>
+        </div>
+        <div class="text-sm muted mt-1">${esc(e.entrega)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const docs = ACERVO.map(d => {
+    const lido = a.lidos.includes(d.id);
+    return `<div class="flex items-center justify-between gap-2 panel p-3">
+      <div class="min-w-0">
+        <div class="font-semibold text-sm truncate">${esc(d.nome)} <span class="muted">(${d.versao})</span></div>
+        <div class="text-xs muted">${lido ? '✓ já lido neste app — não será relido' : 'pendente de leitura'}</div>
+      </div>
+      <button class="btn ${lido ? 'btn-ghost' : 'btn-primary'}" style="padding:.4rem .7rem;font-size:.75rem" onclick="marcarLido('${d.id}')">${lido ? 'Desmarcar' : 'Marcar lido'}</button>
+    </div>`;
+  }).join('');
+
+  const hist = a.historico.length
+    ? a.historico.slice().reverse().map(h => `<div class="text-sm muted">• <b>${esc(h.ts)}</b> — ${esc(h.texto)}</div>`).join('')
+    : '<div class="text-sm muted">Nenhum evento registrado.</div>';
+
+  const resumoRevisao = a.modoTarefa === 'revisar' ? `
+    <div class="panel p-4 mb-4">
+      <div class="font-bold mb-2">🔍 Resumo do app existente</div>
+      <div class="grid sm:grid-cols-2 gap-3 text-sm">
+        <div><span class="muted">Versão:</span> <b>${esc(a.versaoAtual || '—')} → ${esc(a.versaoNova || '—')}</b></div>
+        <div><span class="muted">Selo &lt;head&gt;:</span> ${a.seloHead ? 'preenchido' : 'vazio'}</div>
+        <div><span class="muted">Ficha A–J:</span> ${a.fichaAJ ? 'preenchida' : 'vazia'}</div>
+        <div><span class="muted">Inventário:</span> ${(a.invCumpre || a.invFalta) ? 'preenchido' : 'vazio'}</div>
+      </div>
+    </div>` : '';
+
+  return `
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div>
+        <h1 class="text-xl font-extrabold m-0">Registro de progresso</h1>
+        <p class="text-sm muted m-0">${esc(a.nome)} · <span class="badge ${a.modoTarefa === 'revisar' ? 'badge-warn' : 'badge-info'}">${badgeModo(a)}</span></p>
+      </div>
+      <button class="btn btn-ghost" onclick="go('home')">← Voltar</button>
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-3 mb-6">
+      <div class="stat"><div class="statnum brand">${a.concluidas.length}/${etsDoApp(a).length}</div><div class="statlabel">etapas concluídas</div></div>
+      <div class="stat"><div class="statnum ok">${a.tokensEconomizados.toLocaleString('pt-BR')}</div><div class="statlabel">tokens economizados</div></div>
+      <div class="stat"><div class="statnum accent">${a.promptsGerados || 0}</div><div class="statlabel">prompts gerados</div></div>
+    </div>
+
+    ${resumoRevisao}
+
+    <div class="grid lg:grid-cols-3 gap-4">
+      <div class="lg:col-span-2">
+        <h2 class="font-bold mb-3">Etapas</h2>
+        ${timeline}
+      </div>
+      <div class="space-y-4">
+        <div>
+          <h2 class="font-bold mb-3">Documentos lidos</h2>
+          <div class="space-y-2">${docs}</div>
+        </div>
+        <div class="panel p-4">
+          <h2 class="font-bold mb-2">Histórico</h2>
+          <div class="space-y-1 max-h-64 overflow-auto">${hist}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function marcarEtapa(id){
+  const a = appAtivo();
+  if(a.concluidas.includes(id)){ a.concluidas = a.concluidas.filter(x => x !== id); toast('Etapa reaberta.'); }
+  else {
+    a.concluidas.push(id);
+    const e = etapaPorId(id);
+    a.historico.push({ ts: agora(), texto: 'Etapa concluída: ' + e.nome });
+    if(e.le && !a.lidos.includes(e.le)){ a.lidos.push(e.le); }
+    const ets = etsDoApp(a);
+    const prox = ets.find(et => !a.concluidas.includes(et.id));
+    if(prox){ a.etapaAtual = prox.id; S.etapaAtiva = prox.id; }
+    toast('Etapa concluída e leitura registrada.');
+  }
+  render();
+}
+
+function marcarLido(id){
+  const a = appAtivo();
+  if(a.lidos.includes(id)){ a.lidos = a.lidos.filter(x => x !== id); toast('Leitura desmarcada.'); }
+  else {
+    a.lidos.push(id);
+    a.historico.push({ ts: agora(), texto: 'Documento lido: ' + (acervoPorId(id) || {}).nome });
+    toast('Documento marcado como lido.');
+  }
+  render();
+}
+
+/* ============================================================
+   VIEW: ACERVO
+   ============================================================ */
+function renderAcervo(){
+  const a = appAtivo();
+  const cards = ACERVO.map(d => {
+    const lido = a.lidos.includes(d.id);
+    return `<div class="panel p-5">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <div class="font-bold">${esc(d.nome)}</div>
+          <div class="text-xs muted">${esc(d.tipo)} · ${d.versao}</div>
+        </div>
+        <span class="badge ${lido ? 'badge-ok' : 'badge-warn'}">${lido ? 'lido' : 'não lido'}</span>
+      </div>
+      <div class="text-sm mt-3 space-y-1">${d.resumo.map(p => '• ' + esc(p)).join('<br>')}</div>
+      <button class="btn btn-ghost mt-3 w-full" style="padding:.45rem .8rem;font-size:.8rem" onclick="marcarLido('${d.id}')">${lido ? 'Desmarcar leitura' : 'Marcar como lido'}</button>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div>
+        <h1 class="text-xl font-extrabold m-0">Acervo v5.8</h1>
+        <p class="text-sm muted m-0">Resumos embutidos usados pelo modo enxuto — valem tanto para criar quanto para revisar.</p>
+      </div>
+      <button class="btn btn-ghost" onclick="go('home')">← Voltar</button>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">${cards}</div>
+  `;
+}
+
+/* ============================================================
+   VIEW: AJUDA
+   ============================================================ */
+function renderAjuda(){
+  return `
+    <div class="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div>
+        <h1 class="text-xl font-extrabold m-0">Como o núcleo econômico funciona</h1>
+        <p class="text-sm muted m-0">Fazer mais, perguntando e relendo menos — agora também para revisar apps existentes.</p>
+      </div>
+      <button class="btn btn-ghost" onclick="go('home')">← Voltar</button>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="panel p-5 space-y-3">
+        <div class="font-bold">⚡ Economia de tokens</div>
+        <ul class="text-sm space-y-2 m-0 pl-4">
+          <li>Cada etapa carrega <b>somente o resumo</b> do documento necessário — nunca o material completo.</li>
+          <li>O prompt avisa o que já foi lido para <b>não reler</b> Livro, Guia ou Bloco de Entrega.</li>
+          <li>A ficha vai <b>resumida</b> por padrão; a completa é opcional.</li>
+          <li>O comparativo estima a diferença contra o modo que relê o acervo inteiro.</li>
+        </ul>
+      </div>
+
+      <div class="panel p-5 space-y-3">
+        <div class="font-bold">🔧 Revisar / Atualizar app existente</div>
+        <ul class="text-sm space-y-2 m-0 pl-4">
+          <li>Informe o <b>selo do &lt;head&gt;</b>, a <b>Ficha A–J</b> e o <b>inventário do que já cumpre e do que falta</b>.</li>
+          <li>O <b>Inventário / Diagnóstico</b> analisa sem alterar código.</li>
+          <li>A <b>Revisão &amp; Atualização</b> propõe mudanças incrementais, testadas, com <b>proteção de dados</b> e <b>plano de volta</b>.</li>
+          <li>A entrega sai versionada, com changelog, manual, testes e conferência.</li>
+        </ul>
+      </div>
+
+      <div class="panel p-5 space-y-3">
+        <div class="font-bold">🗂️ Registro persistente de progresso</div>
+        <ul class="text-sm space-y-2 m-0 pl-4">
+          <li>Cada app guarda <b>etapas concluídas</b>, <b>documentos lidos</b> e <b>histórico de eventos</b>.</li>
+          <li>O prompt embute esse registro para evitar perguntas repetidas.</li>
+          <li>Ao concluir uma etapa, a leitura associada é marcada automaticamente e o app avança para a próxima pendente.</li>
+        </ul>
+      </div>
+
+      <div class="panel p-5 space-y-3">
+        <div class="font-bold">💾 Persistência deste protótipo</div>
+        <p class="text-sm m-0">Este preview roda no canvas, que <b>não grava dados no navegador</b>. Para preservar o progresso:</p>
+        <ol class="text-sm space-y-1 m-0 pl-4">
+          <li>Toque em <b>💾 Estado</b> no topo e copie o JSON.</li>
+          <li>Guarde o JSON em uma nota ou no próprio repositório.</li>
+          <li>Na próxima sessão, cole de volta em <b>Importar</b>.</li>
+        </ol>
+        <p class="text-xs muted m-0">A gravação automática será ligada junto com o Firestore, em etapa futura.</p>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   MODAL DE ESTADO (exportar / importar)
+   ============================================================ */
+function estadoJSON(){
+  return JSON.stringify({
+    versaoGerador: '1.3',
+    projeto: 'fenix-criador-de-apps',
+    modoEnxuto: S.modoEnxuto,
+    fichaCompleta: S.fichaCompleta,
+    apps: S.apps
+  }, null, 2);
+}
+
+function abrirEstado(){
+  const modal = document.getElementById('modalRoot');
+  modal.innerHTML = `
+    <div class="modal-overlay" onclick="if(event.target===this)fecharModal()">
+      <div class="modal">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-extrabold m-0">Estado do gerador (JSON)</h3>
+          <button class="btn btn-ghost" onclick="fecharModal()">✕</button>
+        </div>
+        <p class="text-sm muted mb-3">Copie este JSON para preservar o progresso. Para restaurar, cole o JSON na caixa e toque em Importar.</p>
+        <textarea id="estadoTa" class="textarea pre-wrap" rows="14" style="font-size:.75rem">${esc(estadoJSON())}</textarea>
+        <div class="flex gap-2 mt-3 flex-wrap">
+          <button class="btn btn-primary" onclick="copiarEstado()">📋 Copiar estado</button>
+          <button class="btn btn-ghost" onclick="importarEstado()">📥 Importar da caixa</button>
+          <button class="btn btn-danger" onclick="resetPadrao()">↺ Restaurar exemplo</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function fecharModal(){ document.getElementById('modalRoot').innerHTML = ''; }
+function copiarEstado(){ copiarTexto(document.getElementById('estadoTa').value, 'Estado copiado!', 'Copie manualmente da caixa.'); }
+
+function importarEstado(){
+  const ta = document.getElementById('estadoTa');
+  try {
+    const obj = JSON.parse(ta.value);
+    if(!obj || !Array.isArray(obj.apps)) throw new Error('apps ausente');
+    if(typeof obj.modoEnxuto === 'boolean') S.modoEnxuto = obj.modoEnxuto;
+    if(typeof obj.fichaCompleta === 'boolean') S.fichaCompleta = obj.fichaCompleta;
+    S.apps = obj.apps.map(a => Object.assign({
+      concluidas: [], lidos: [], historico: [], tokensEconomizados: 0, promptsGerados: 0,
+      modoTarefa: 'criar', versaoAtual: '', versaoNova: '', seloHead: '', fichaAJ: '', invCumpre: '', invFalta: ''
+    }, a));
+    S.appAtivo = S.apps[0] ? S.apps[0].id : '';
+    if(appAtivo()){
+      const aa = appAtivo();
+      const ets = etsDoApp(aa);
+      if(!ets.some(e => e.id === aa.etapaAtual)) aa.etapaAtual = ets[0].id;
+      S.etapaAtiva = aa.etapaAtual || 'ficha';
+    }
+    ta.value = estadoJSON();
+    S.ultimoPrompt = ''; S.ultimaEconomia = 0;
+    render(); go('home'); fecharModal();
+    toast('Estado importado com sucesso.');
+  } catch(e){
+    toast('JSON inválido. Verifique o conteúdo.');
+  }
+}
+
+function resetPadrao(){
+  if(!confirm('Restaurar os dois apps de exemplo (um de criação e um de revisão)?')) return;
+  location.reload();
+}
+
+/* ---------- Utilitários ---------- */
+function agora(){
+  const d = new Date();
+  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' +
+         d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+/* ---------- Boot ---------- */
+render();
+</script>
+</body>
+</html>
